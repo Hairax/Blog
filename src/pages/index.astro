@@ -1,11 +1,39 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import { db, User } from "astro:db";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const users = await db.select().from(User);
+
+if (Astro.request.method === "POST") {
+  // Parse form data
+  const formData = await Astro.request.formData();
+  const id = users.length + 1;
+  const name = formData.get("name");
+  const lastname = formData.get("lastname");
+  const date = new Date();
+  if (typeof name === "string" && typeof lastname === "string") {
+    // Insert form data into the Comment table
+    await db.insert(User).values({ id, name, lastname, date });
+  }
+}
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<h2>Comentarios</h2>
+
+{
+  users.map(({ id, name, lastname, date }) => (
+    <article>
+      <p>Name: {name}</p>
+      <p>{id}</p>
+      <p>{lastname}</p>
+      <p>{date}</p>
+    </article>
+  ))
+}
+
+<form method="POST" style="display: grid" enctype="multipart/form-data">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name" required />
+  <label for="lastname">Lastname:</label>
+  <input type="text" id="lastname" name="lastname" required />
+  <button type="submit" onclick="alert('Comentario enviado')">Enviar</button>
+</form>
